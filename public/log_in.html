@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+</head>
+
+<script src = "http://localhost:3000/socket.io/socket.io.js"></script>
+
+<script>
+    var socket = io()
+    var user_name = ""
+    
+    function display_active(){  
+        socket.on("online_users",(data) => {
+        console.log(data)
+        document.getElementById("connected_users").innerHTML = ""
+        
+        for (const[key,value] of Object.entries(data)){
+            console.log(key,value)
+            document.getElementById("connected_users").innerHTML += value+" : "+key+"<br>"
+            }
+        })
+    }
+
+    function send_usrname(){
+        user_name = document.getElementById("usr_name").value
+        socket.emit("sending_usr_info",user_name)
+        document.getElementById("usr_form").innerHTML = ""
+        document.getElementById("chat").innerHTML = "welcome to chat room " + user_name +"<br>[online users:]"
+        display_active()
+        document.getElementById("write_message").innerHTML = "<input type='text' id='ur_chat'></input>"
+        document.getElementById("msg").innerHTML = "<p>[messages]:</p>" 
+        document.getElementById("btn").innerHTML = "<button onclick='send_message()'>send</button>"
+        world_chat()
+    }
+
+    function send_message(){
+        var user_msg = document.getElementById("ur_chat").value
+        var message_container = document.createElement("p")
+        message_container.innerHTML = "you:"+user_msg
+        document.getElementById("msg").append(message_container)
+        
+        socket.emit("send_msg_server",{msg:user_msg,sender_name:user_name})
+        console.log({msg:user_msg,sender_name:user_name})
+        document.getElementById("ur_chat").value = ""
+    }
+    
+    function world_chat(){
+        socket.on("all_msg",(data) => {
+            display_chat(data)
+        })
+    }
+
+    function display_chat(message){
+        document.getElementById("msg").innerHTML += "<br>"+message["sender_name"] + ":" + message["msg"] +"<br>" 
+    }
+</script>
+
+<body>
+    <p id="chat">hello world</p>
+    <div id="usr_form" >
+        <input type="text"id="usr_name" >
+        <br>
+        <button onclick="send_usrname()">log in</button>
+    </div>
+    <div id="connected_users"></div>
+          <p id="msg"></p>
+          <p id="write_message"></p>
+          <p id="btn"></p>       
+    </div>
+
+</body>
+</html>
